@@ -824,6 +824,17 @@ header h1 {
         font-size: 11px;
     }
     
+    /* Bus screen: center the whole screen content on mobile */
+    #busScreen.active {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    #busScreen.active .container {
+        align-items: center;
+        width: 100%;
+    }
+    
     /* Bus diagram: keep 3 left / aisle / 3 right; smaller seats to fit without horizontal scroll */
     #busScreen.active .bus-diagram-container {
         overflow-x: hidden;
@@ -831,6 +842,9 @@ header h1 {
         padding: 10px 8px;
         width: 100%;
         max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        align-self: center;
         -webkit-overflow-scrolling: touch;
     }
     
@@ -908,7 +922,27 @@ header h1 {
         width: 56px;
     }
     
-    /* Compact bus screen header on mobile */
+    /* Compact bus screen header on mobile – center title between Back and Settings */
+    #busScreen.active header > div {
+        position: relative;
+        padding-left: 70px;
+        padding-right: 70px;
+    }
+    
+    #busScreen.active #backToMainBtn {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
+    #busScreen.active #busSettingsBtn {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
     #busScreen.active header h1 {
         font-size: 18px;
     }
