@@ -777,10 +777,51 @@ header h1 {
     align-items: center;
 }
 
-/* Responsive Design */
+/* Responsive Design – mobile: 2 columns, compact cards so all fit on one screen */
 @media (max-width: 768px) {
+    #mainScreen.active header {
+        margin-bottom: 16px;
+    }
+    
+    #mainScreen.active .main-actions {
+        margin-bottom: 12px;
+        gap: 8px;
+    }
+    
+    #mainScreen.active #createBusBtn,
+    #mainScreen.active #studentsBtn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    
     .busses-list {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    
+    .bus-card {
+        padding: 10px;
+        min-height: 0;
+    }
+    
+    .bus-name {
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+    
+    .bus-meta {
+        font-size: 11px;
+    }
+    
+    .bus-routes {
+        gap: 4px;
+        margin-top: 6px;
+    }
+    
+    .bus-routes .btn {
+        padding: 6px 8px;
+        font-size: 11px;
     }
     
     .bus-diagram {
@@ -800,12 +841,39 @@ header h1 {
 }
 
 @media (max-width: 480px) {
+    #mainScreen.active header h1,
     header h1 {
-        font-size: 28px;
+        font-size: 22px;
+    }
+    
+    #mainScreen.active .subtitle,
+    .subtitle {
+        font-size: 13px;
+    }
+    
+    #mainScreen.active header {
+        margin-bottom: 12px;
+    }
+    
+    .busses-list {
+        gap: 6px;
     }
     
     .bus-card {
-        padding: 15px;
+        padding: 8px;
+    }
+    
+    .bus-name {
+        font-size: 13px;
+    }
+    
+    .bus-meta {
+        font-size: 10px;
+    }
+    
+    .bus-routes .btn {
+        padding: 5px 6px;
+        font-size: 10px;
     }
     
     .bus-diagram-container {

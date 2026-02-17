@@ -59,4 +59,4 @@ For detailed steps to push to GitHub and install on mobile, see **[DEPLOY.md](DE
 
 ## Version
 
-1.0.2
+1.0.3
