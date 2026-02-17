@@ -1067,7 +1067,7 @@ class BusStudentTracker {
                 const studentId = assignmentMap[key];
                 const student = studentId ? this.students.find(s => s.id === studentId) : null;
                 const seatClass = student ? 'occupied' : '';
-                const studentName = student ? (student.firstName || student.name || '').split(' ')[0] : '';
+                const studentName = student ? this.getStudentDisplayName(student) : '';
                 const seatLabel = studentName ? this.escapeHtml(studentName) : '';
                 
                 html += `
@@ -1091,7 +1091,7 @@ class BusStudentTracker {
                 const studentId = assignmentMap[key];
                 const student = studentId ? this.students.find(s => s.id === studentId) : null;
                 const seatClass = student ? 'occupied' : '';
-                const studentName = student ? (student.firstName || student.name || '').split(' ')[0] : '';
+                const studentName = student ? this.getStudentDisplayName(student) : '';
                 const seatLabel = studentName ? this.escapeHtml(studentName) : '';
                 
                 html += `
@@ -1383,7 +1383,7 @@ class BusStudentTracker {
         document.getElementById('settingsModal').style.display = 'block';
         document.getElementById('firebaseSyncId').textContent = this.syncId;
         document.getElementById('syncIdInput').value = '';
-        document.getElementById('versionText').textContent = 'App Version: 1.0.4';
+        document.getElementById('versionText').textContent = 'App Version: 1.0.5';
         this.updateSyncStatus();
         this.updateEncryptionSettingsUI();
     }
@@ -1942,7 +1942,7 @@ class BusStudentTracker {
         if (!this.firebaseEnabled || !window.db) return;
         
         try {
-            const CURRENT_VERSION = '1.0.4'; // Update this when deploying new version
+            const CURRENT_VERSION = '1.0.5'; // Update this when deploying new version
             const versionDoc = await window.db.collection('busTracker').doc('appVersion').get();
             
             if (versionDoc.exists) {
@@ -2361,7 +2361,7 @@ class BusStudentTracker {
     getStudentDisplayName(student) {
         if (!student) return '';
         if (student.firstName && student.lastName) return `${student.firstName} ${student.lastName}`.trim();
-        return student.name || '';
+        return (student.name || student.firstName || '').trim();
     }
 
     normalizeAddressForMatch(addr) {
