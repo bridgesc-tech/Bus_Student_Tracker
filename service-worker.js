@@ -47,15 +47,25 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Network-first for app shell so updates always load when online
+function isAppShellRequest(request) {
+  const url = request.url;
+  return request.destination === 'document' ||
+    request.destination === 'script' ||
+    request.destination === 'style' ||
+    url.includes('index.html') ||
+    url.endsWith('/') ||
+    url.includes('script.js') ||
+    url.includes('styles.css') ||
+    url.includes('manifest.json') ||
+    url.includes('firebase-config.js');
+}
+
 self.addEventListener('fetch', (event) => {
-  // For HTML files, always try network first to get updates
-  if (event.request.destination === 'document' || 
-      event.request.url.includes('index.html') ||
-      event.request.url.endsWith('/')) {
+  if (isAppShellRequest(event.request)) {
     event.respondWith(
       fetch(event.request)
         .then((fetchResponse) => {
-          // Cache the fresh response
           if (fetchResponse && fetchResponse.status === 200) {
             const responseToCache = fetchResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -64,19 +74,13 @@ self.addEventListener('fetch', (event) => {
           }
           return fetchResponse;
         })
-        .catch(() => {
-          // If network fails, try cache
-          return caches.match(event.request);
-        })
+        .catch(() => caches.match(event.request))
     );
   } else {
-    // For other resources, use cache first, then network
     event.respondWith(
       caches.match(event.request)
         .then((response) => {
-          // Return cached version or fetch from network
           return response || fetch(event.request).then((fetchResponse) => {
-            // Cache new responses for future use
             if (fetchResponse && fetchResponse.status === 200) {
               const responseToCache = fetchResponse.clone();
               caches.open(CACHE_NAME).then((cache) => {

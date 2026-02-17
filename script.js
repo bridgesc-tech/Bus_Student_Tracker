@@ -1,5 +1,7 @@
 // Bus Student Tracker Application
 // Uses IndexedDB for primary storage with optional Firebase sync
+// Bump APP_VERSION when you deploy; also update service-worker.js and manifest.json
+const APP_VERSION = '1.0.7';
 
 class BusStudentTracker {
     constructor() {
@@ -850,6 +852,8 @@ class BusStudentTracker {
     initializeApp() {
         this.setupEventListeners();
         this.renderBusses();
+        const versionEl = document.getElementById('versionText');
+        if (versionEl) versionEl.textContent = 'App Version: ' + APP_VERSION;
         this.checkForUpdates();
         this.checkFirebaseVersion();
         this.updateSyncStatus();
@@ -1383,7 +1387,7 @@ class BusStudentTracker {
         document.getElementById('settingsModal').style.display = 'block';
         document.getElementById('firebaseSyncId').textContent = this.syncId;
         document.getElementById('syncIdInput').value = '';
-        document.getElementById('versionText').textContent = 'App Version: 1.0.7';
+        document.getElementById('versionText').textContent = 'App Version: ' + APP_VERSION;
         this.updateSyncStatus();
         this.updateEncryptionSettingsUI();
     }
@@ -1942,15 +1946,14 @@ class BusStudentTracker {
         if (!this.firebaseEnabled || !window.db) return;
         
         try {
-            const CURRENT_VERSION = '1.0.7'; // Update this when deploying new version
             const versionDoc = await window.db.collection('busTracker').doc('appVersion').get();
             
             if (versionDoc.exists) {
                 const firebaseVersion = versionDoc.data().version;
-                if (this.compareVersions(firebaseVersion, CURRENT_VERSION) > 0) {
+                if (this.compareVersions(firebaseVersion, APP_VERSION) > 0) {
                     // New version available
                     document.getElementById('updateBanner').classList.remove('hidden');
-                    console.log(`New version available: ${firebaseVersion} (current: ${CURRENT_VERSION})`);
+                    console.log(`New version available: ${firebaseVersion} (current: ${APP_VERSION})`);
                 }
             }
         } catch (error) {
@@ -2997,9 +3000,9 @@ let app;
 document.addEventListener('DOMContentLoaded', () => {
     app = new BusStudentTracker();
     
-    // Register service worker (bump ?v= when you bump CURRENT_VERSION so browsers fetch new SW)
+    // Register service worker (?v= uses APP_VERSION so new deploys get fresh SW)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./service-worker.js?v=1.0.7').then(registration => {
+        navigator.serviceWorker.register('./service-worker.js?v=' + APP_VERSION).then(registration => {
             console.log('Service Worker registered:', registration);
         }).catch(error => {
             console.error('Service Worker registration failed:', error);
