@@ -824,19 +824,85 @@ header h1 {
         font-size: 11px;
     }
     
-    .bus-diagram {
-        min-width: 100%;
+    /* Bus diagram: fit in viewport, no horizontal scroll */
+    #busScreen.active .bus-diagram-container {
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding: 12px 10px;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    #busScreen.active .bus-diagram {
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        gap: 4px;
+    }
+    
+    .bus-row {
+        gap: 16px;
+        max-width: 100%;
+    }
+    
+    .seat-group {
+        gap: 4px;
+    }
+    
+    .seat-group.left,
+    .seat-group.right {
+        flex: 1;
+        min-width: 0;
+        justify-content: center;
+    }
+    
+    .seat-group.left {
+        justify-content: flex-end;
+    }
+    
+    .seat-group.right {
+        justify-content: flex-start;
     }
     
     .seat {
-        width: 60px;
-        height: 60px;
-        font-size: 10px;
+        width: 48px;
+        height: 48px;
+        font-size: 9px;
+        padding: 2px;
+        flex-shrink: 0;
     }
     
     .seat.driver {
-        width: 60px;
-        height: 60px;
+        width: 48px;
+        height: 48px;
+        font-size: 9px;
+    }
+    
+    .seat-name {
+        font-size: 9px;
+    }
+    
+    .seat-label {
+        font-size: 7px;
+        margin-top: 0;
+    }
+    
+    .driver-row {
+        margin-top: 4px;
+    }
+    
+    /* Compact bus screen header on mobile */
+    #busScreen.active header h1 {
+        font-size: 18px;
+    }
+    
+    #busScreen.active header .subtitle {
+        font-size: 12px;
+    }
+    
+    #busScreen.active header .btn {
+        padding: 6px 10px;
+        font-size: 13px;
     }
 }
 
@@ -876,19 +942,55 @@ header h1 {
         font-size: 10px;
     }
     
-    .bus-diagram-container {
-        padding: 15px;
+    /* Bus diagram: even smaller on narrow phones */
+    #busScreen.active .bus-diagram-container {
+        padding: 8px 6px;
+    }
+    
+    #busScreen.active .bus-diagram {
+        gap: 3px;
+    }
+    
+    .bus-row {
+        gap: 10px;
+    }
+    
+    .seat-group {
+        gap: 3px;
     }
     
     .seat {
-        width: 50px;
-        height: 50px;
-        font-size: 9px;
+        width: 40px;
+        height: 40px;
+        font-size: 8px;
+        padding: 2px;
     }
     
     .seat.driver {
-        width: 50px;
-        height: 50px;
+        width: 40px;
+        height: 40px;
+        font-size: 8px;
+    }
+    
+    .seat-name {
+        font-size: 8px;
+    }
+    
+    .seat-label {
+        font-size: 6px;
+    }
+    
+    #busScreen.active header h1 {
+        font-size: 16px;
+    }
+    
+    #busScreen.active header .subtitle {
+        font-size: 11px;
+    }
+    
+    #busScreen.active header .btn {
+        padding: 6px 8px;
+        font-size: 12px;
     }
 }
 

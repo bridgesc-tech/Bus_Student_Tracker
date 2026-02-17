@@ -2,7 +2,7 @@
   "name": "Bus Student Tracker",
   "short_name": "Bus Tracker",
   "description": "Track student bus seating assignments",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#4169E1",

@@ -1,5 +1,5 @@
 // Update this version number when you deploy a new version
-const APP_VERSION = '1.0.3';
+const APP_VERSION = '1.0.4';
 const CACHE_NAME = `bus-student-tracker-${APP_VERSION}`;
 const urlsToCache = [
   './',

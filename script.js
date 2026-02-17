@@ -1383,7 +1383,7 @@ class BusStudentTracker {
         document.getElementById('settingsModal').style.display = 'block';
         document.getElementById('firebaseSyncId').textContent = this.syncId;
         document.getElementById('syncIdInput').value = '';
-        document.getElementById('versionText').textContent = 'App Version: 1.0.3';
+        document.getElementById('versionText').textContent = 'App Version: 1.0.4';
         this.updateSyncStatus();
         this.updateEncryptionSettingsUI();
     }
@@ -1942,7 +1942,7 @@ class BusStudentTracker {
         if (!this.firebaseEnabled || !window.db) return;
         
         try {
-            const CURRENT_VERSION = '1.0.3'; // Update this when deploying new version
+            const CURRENT_VERSION = '1.0.4'; // Update this when deploying new version
             const versionDoc = await window.db.collection('busTracker').doc('appVersion').get();
             
             if (versionDoc.exists) {
