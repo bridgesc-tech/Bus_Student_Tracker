@@ -1119,8 +1119,9 @@ header h1 {
     #routeModal .route-table th,
     #routeModal .route-table td {
         padding: 4px 3px;
-        word-break: break-word;
-        overflow-wrap: break-word;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     
     #routeModal .route-table thead th {
@@ -1139,14 +1140,19 @@ header h1 {
         font-size: 11px;
     }
     
-    #routeModal .route-col-order { width: 5%; }
-    #routeModal .route-col-action { width: 11%; }
-    #routeModal .route-col-direction { width: 9%; }
+    #routeModal .route-col-order {
+        width: 4%;
+        min-width: 0;
+        padding: 4px 1px !important;
+        text-align: center;
+    }
+    #routeModal .route-col-action { width: 12%; }
+    #routeModal .route-col-direction { width: 10%; }
     #routeModal .route-col-address { width: 24%; }
     #routeModal .route-col-student { width: 20%; }
     #routeModal .route-col-roadside { width: 9%; }
     #routeModal .route-col-time { width: 9%; }
-    #routeModal .route-col-actions { width: 13%; }
+    #routeModal .route-col-actions { width: 12%; }
     
     #routeModal .route-col-actions .btn {
         padding: 4px 6px;
