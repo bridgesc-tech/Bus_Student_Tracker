@@ -1383,7 +1383,7 @@ class BusStudentTracker {
         document.getElementById('settingsModal').style.display = 'block';
         document.getElementById('firebaseSyncId').textContent = this.syncId;
         document.getElementById('syncIdInput').value = '';
-        document.getElementById('versionText').textContent = 'App Version: 1.0.5';
+        document.getElementById('versionText').textContent = 'App Version: 1.0.6';
         this.updateSyncStatus();
         this.updateEncryptionSettingsUI();
     }
@@ -1942,7 +1942,7 @@ class BusStudentTracker {
         if (!this.firebaseEnabled || !window.db) return;
         
         try {
-            const CURRENT_VERSION = '1.0.5'; // Update this when deploying new version
+            const CURRENT_VERSION = '1.0.6'; // Update this when deploying new version
             const versionDoc = await window.db.collection('busTracker').doc('appVersion').get();
             
             if (versionDoc.exists) {
@@ -2997,9 +2997,9 @@ let app;
 document.addEventListener('DOMContentLoaded', () => {
     app = new BusStudentTracker();
     
-    // Register service worker
+    // Register service worker (bump ?v= when you bump CURRENT_VERSION so browsers fetch new SW)
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./service-worker.js').then(registration => {
+        navigator.serviceWorker.register('./service-worker.js?v=1.0.6').then(registration => {
             console.log('Service Worker registered:', registration);
         }).catch(error => {
             console.error('Service Worker registration failed:', error);

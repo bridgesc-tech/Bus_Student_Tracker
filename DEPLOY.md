@@ -102,7 +102,23 @@ Use this to confirm the app looks and runs well on devices:
 
 ---
 
-## 6. Optional: Restrict Firebase API Key
+## 6. Triggering the “Update available” prompt after a deploy
+
+After you push a new version to GitHub (and the site redeploys), existing users may not see the update banner until the app checks for it. Do **both** of the following:
+
+1. **Update the version in Firebase** (so the in-app banner can show):
+   - Open [Firebase Console](https://console.firebase.google.com/) → your project → **Firestore Database**.
+   - Find (or create) the document: collection **`busTracker`** → document **`appVersion`**.
+   - Set the field **`version`** to the new version string (e.g. **`1.0.6`**), matching the version in `script.js` and `service-worker.js`.
+   - Save. Users on an older version will then see “New version available!” when the app checks Firebase (e.g. on open or when they tap **Settings → Check for Updates**).
+
+2. **Have users refresh or tap “Check for Updates”**:
+   - The app registers the service worker with a versioned query string (e.g. `service-worker.js?v=1.0.6`), so when you deploy a new build, the next time the app loads or the user taps **Settings → Check for Updates**, the browser fetches the new `service-worker.js` and can show the banner.
+   - Users can tap **Settings → Check for Updates** to force a check, then **Update Now** (or refresh the page) to load the new version.
+
+---
+
+## 7. Optional: Restrict Firebase API Key
 
 To limit where your Firebase API key can be used:
 
