@@ -865,17 +865,22 @@ header h1 {
         justify-content: flex-start;
     }
     
+    /* Seats fill container: flex to use full width on both sides */
     .seat {
-        width: 48px;
+        flex: 1;
+        min-width: 0;
+        min-height: 48px;
+        width: auto;
         height: 48px;
         font-size: 10px;
-        padding: 3px;
-        flex-shrink: 0;
+        padding: 4px;
         border-width: 2px;
     }
     
     .seat.driver {
-        width: 48px;
+        flex: 0 0 auto;
+        width: 56px;
+        min-height: 48px;
         height: 48px;
         font-size: 10px;
     }
@@ -891,6 +896,16 @@ header h1 {
     
     .driver-row {
         margin-top: 4px;
+    }
+    
+    .driver-seat-group .seat:not(.driver) {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .driver-seat-group .seat.driver {
+        flex: 0 0 auto;
+        width: 56px;
     }
     
     /* Compact bus screen header on mobile */
@@ -944,7 +959,7 @@ header h1 {
         font-size: 10px;
     }
     
-    /* Bus diagram: even smaller seats on narrow phones, still 3 left / aisle / 3 right */
+    /* Bus diagram: seats still fill container, slightly tighter gaps */
     #busScreen.active .bus-diagram-container {
         padding: 8px 6px;
     }
@@ -962,15 +977,14 @@ header h1 {
     }
     
     .seat {
-        width: 40px;
-        height: 40px;
+        min-height: 44px;
         font-size: 9px;
-        padding: 2px;
+        padding: 3px;
     }
     
     .seat.driver {
-        width: 40px;
-        height: 40px;
+        width: 48px;
+        min-height: 44px;
         font-size: 9px;
     }
     
@@ -980,6 +994,10 @@ header h1 {
     
     .seat-label {
         font-size: 6px;
+    }
+    
+    .driver-seat-group .seat.driver {
+        width: 48px;
     }
     
     #busScreen.active header h1 {
