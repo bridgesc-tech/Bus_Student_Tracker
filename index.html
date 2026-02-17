@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4169E1">
+    <title>Bus Student Tracker</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚌</text></svg>">
+    <link rel="manifest" href="manifest.json" onerror="this.remove()">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="apple-touch-icon" href="icon-192.png" onerror="this.remove()">
+    
+    <!-- Firebase SDKs (only loads if not file:// protocol) -->
+    <script>
+        if (window.location.protocol !== 'file:') {
+            const script1 = document.createElement('script');
+            script1.src = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js';
+            
+            script1.onload = () => {
+                // Once Firebase App is loaded, load Auth
+                const scriptAuth = document.createElement('script');
+                scriptAuth.src = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js';
+                
+                scriptAuth.onload = () => {
+                    // Once Auth is loaded, load Firestore
+                    const script2 = document.createElement('script');
+                    script2.src = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js';
+                    
+                    script2.onload = () => {
+                        // Once all are loaded, load the config
+                        const configScript = document.createElement('script');
+                        configScript.src = 'firebase-config.js';
+                        document.head.appendChild(configScript);
+                    };
+                    document.head.appendChild(script2);
+                };
+                document.head.appendChild(scriptAuth);
+            };
+            document.head.appendChild(script1);
+        }
+    </script>
+</head>
+<body>
+    <!-- Update Notification Banner -->
+    <div id="updateBanner" class="update-banner hidden">
+        <div class="update-banner-content">
+            <span class="update-banner-text">🔄 New version available! Click to update.</span>
+            <div class="update-banner-actions">
+                <button id="updateNowBtn" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px; margin-right: 8px;">Update Now</button>
+                <button id="updateLaterBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">Later</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Main Screen: Bus List -->
+        <div id="mainScreen" class="screen active">
+            <header>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="flex: 1; text-align: center;">
+                        <h1>Bus Student Tracker</h1>
+                        <p class="subtitle">Manage Bus Seating Assignments</p>
+                    </div>
+                    <button id="mainSettingsBtn" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px; margin-left: 10px;">⚙️</button>
+                </div>
+                <div id="syncStatus" style="margin-top: 10px; font-size: 14px; color: white; text-align: center; font-weight: 500; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);"></div>
+            </header>
+
+            <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
+                <button class="btn btn-primary" id="createBusBtn" style="padding: 10px 16px; font-size: 14px; white-space: nowrap;">
+                    <span style="color: white; font-size: 18px; font-weight: bold; margin-right: 4px;">+</span> Create Bus
+                </button>
+                <button class="btn btn-secondary" id="studentsBtn" style="padding: 10px 16px; font-size: 14px; white-space: nowrap;">
+                    👥 Students
+                </button>
+            </div>
+
+            <div class="busses-list" id="bussesList">
+                <!-- Busses will be dynamically added here -->
+            </div>
+
+            <div class="empty-state" id="emptyBussesState" style="display: none;">
+                <p>🚌 No busses found</p>
+                <p>Create a new bus to get started</p>
+            </div>
+        </div>
+
+        <!-- Bus View Screen: Seating Diagram -->
+        <div id="busScreen" class="screen">
+            <header>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <button id="backToMainBtn" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">← Back</button>
+                    <div style="flex: 1; text-align: center;">
+                        <h1 id="busNameHeader">Bus Name</h1>
+                        <p class="subtitle" id="busSubtitle">AM Route - Seating Assignment</p>
+                        <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                            <button id="checkinBtn" class="btn" style="padding: 10px 20px; font-size: 16px; background: var(--success-color); color: white; font-weight: 600;">✓ Check In</button>
+                            <button id="routeBtn" class="btn btn-primary" style="padding: 10px 20px; font-size: 16px;">📍 Route</button>
+                        </div>
+                    </div>
+                    <button id="busSettingsBtn" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">⚙️</button>
+                </div>
+            </header>
+
+            <div class="bus-diagram-container">
+                <div class="bus-diagram" id="busDiagram">
+                    <!-- Bus seats will be dynamically generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Bus Modal -->
+    <div class="modal" id="busModal">
+        <div class="modal-content">
+            <span class="close" id="closeBusModal">&times;</span>
+            <h2 id="busModalTitle">Create Bus</h2>
+            <form id="busForm">
+                <div class="form-group">
+                    <label for="busNameInput">Bus Number:</label>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-weight: 600; color: var(--text-primary);">Bus</span>
+                        <input type="text" id="busNameInput" class="form-control" placeholder="e.g., 12" required style="flex: 1;">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Save Bus</button>
+            </form>
+            <button id="deleteBusBtn" class="btn btn-danger" style="width: 100%; margin-top: 10px; display: none;">Delete Bus</button>
+        </div>
+    </div>
+
+    <!-- Student Search/Selector Modal -->
+    <div class="modal" id="studentSearchModal">
+        <div class="modal-content">
+            <span class="close" id="closeStudentSearchModal">&times;</span>
+            <h2 id="studentSearchModalTitle">Select Student</h2>
+            <div class="form-group">
+                <input type="text" id="studentSearchInput" class="form-control" placeholder="🔍 Search by name..." style="margin-bottom: 15px;">
+            </div>
+            <button id="addNewStudentBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 15px;">➕ Add New Student</button>
+            <div class="students-list" id="studentsList" style="max-height: 400px; overflow-y: auto;">
+                <!-- Students will be dynamically added here -->
+            </div>
+            <div class="empty-state" id="emptyStudentsState" style="display: none;">
+                <p>🔍 No students found</p>
+                <p>Try a different search term or add a new student</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Student Modal -->
+    <div class="modal" id="studentModal">
+        <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <span class="close" id="closeStudentModal">&times;</span>
+            <h2 id="studentModalTitle">Add Student</h2>
+            <form id="studentForm">
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label style="display: block; margin-bottom: 6px;">Students (first name, last name, grade)</label>
+                </div>
+                <div id="studentNameRowsContainer">
+                    <!-- Rows added by script -->
+                </div>
+                <button type="button" id="addStudentRowBtn" class="btn btn-secondary" style="width: 100%; margin-bottom: 20px;">+ Add another student</button>
+                <div style="margin-bottom: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <strong style="color: var(--text-primary);">Contact &amp; address (same for all students above)</strong>
+                </div>
+                <div class="form-group">
+                    <label for="studentBusAMInput">Bus Number for AM Route:</label>
+                    <input type="text" id="studentBusAMInput" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="studentBusPMInput">Bus Number for PM Route:</label>
+                    <input type="text" id="studentBusPMInput" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="studentAddressInput">Physical Address:</label>
+                    <input type="text" id="studentAddressInput" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="studentDropoffAddressInput">Drop off at different address:</label>
+                    <input type="text" id="studentDropoffAddressInput" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="studentParentNameInput">Parent/Guardian Name:</label>
+                    <input type="text" id="studentParentNameInput" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="studentHomePhoneInput">Home Phone:</label>
+                    <input type="tel" id="studentHomePhoneInput" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="studentCellPhoneInput">Cell Phone:</label>
+                    <input type="tel" id="studentCellPhoneInput" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="studentWorkPhoneInput">Work Phone:</label>
+                    <input type="tel" id="studentWorkPhoneInput" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="studentEmergencyContactInput">Emergency Contact Name and Number:</label>
+                    <input type="text" id="studentEmergencyContactInput" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="studentOtherInfoInput">Other Info:</label>
+                    <textarea id="studentOtherInfoInput" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Save</button>
+            </form>
+            <button id="deleteStudentBtn" class="btn btn-danger" style="width: 100%; margin-top: 10px; display: none;">Delete Student</button>
+        </div>
+    </div>
+
+    <!-- Student Info Modal -->
+    <div class="modal" id="studentInfoModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close" id="closeStudentInfoModal">&times;</span>
+            <h2 id="studentInfoName">Student Name</h2>
+            <div class="student-info-section two-column">
+                <div class="info-column">
+                    <div class="info-item">
+                        <label>Grade Level:</label>
+                        <span id="studentInfoGrade">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>AM Bus:</label>
+                        <span id="studentInfoBusAM">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>PM Bus:</label>
+                        <span id="studentInfoBusPM">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Physical Address:</label>
+                        <span id="studentInfoAddress">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Drop off Address:</label>
+                        <span id="studentInfoDropoffAddress">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Parent/Guardian:</label>
+                        <span id="studentInfoParentName">-</span>
+                    </div>
+                </div>
+                <div class="info-column">
+                    <div class="info-item">
+                        <label>Home Phone:</label>
+                        <span id="studentInfoHomePhone">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Cell Phone:</label>
+                        <span id="studentInfoCellPhone">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Work Phone:</label>
+                        <span id="studentInfoWorkPhone">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Emergency Contact:</label>
+                        <span id="studentInfoEmergencyContact">-</span>
+                    </div>
+                    <div class="info-item" id="studentInfoOtherInfoContainer" style="display: none;">
+                        <label>Other Info:</label>
+                        <span id="studentInfoOtherInfo">-</span>
+                    </div>
+                </div>
+            </div>
+            <button id="unassignStudentBtn" class="btn btn-danger" style="width: 100%; margin-top: 20px;">Unassign from Seat</button>
+        </div>
+    </div>
+
+    <!-- Route Modal (spreadsheet) -->
+    <div class="modal" id="routeModal">
+        <div class="modal-content route-modal-content" style="max-width: 95vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+            <span class="close" id="closeRouteModal">&times;</span>
+            <h2 id="routeModalTitle">Route</h2>
+            <div style="margin-bottom: 12px; font-size: 14px; color: var(--text-secondary);">
+                <span id="routeModalBusRoute"></span>
+            </div>
+            <div class="route-table-wrapper" style="flex: 1; min-height: 0; overflow: auto; margin-bottom: 12px;">
+                <table class="route-table" id="routeTable">
+                    <thead>
+                        <tr>
+                            <th class="route-col-order" style="width: 40px;">#</th>
+                            <th class="route-col-action">Action</th>
+                            <th class="route-col-direction">Direction</th>
+                            <th class="route-col-address">Street Address</th>
+                            <th class="route-col-student">Student</th>
+                            <th class="route-col-roadside">Roadside</th>
+                            <th class="route-col-time">Time</th>
+                            <th class="route-col-actions" style="width: 110px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="routeTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="routeModalActions" style="display: flex; gap: 10px; flex-shrink: 0; align-items: center;">
+                <button type="button" id="routeEditBtn" class="btn btn-primary">EDIT</button>
+                <div id="routeEditModeActions" style="display: none; flex; gap: 10px; align-items: center;">
+                    <button type="button" id="routeViewBtn" class="btn btn-secondary">Done</button>
+                    <button type="button" id="routeAddRowBtn" class="btn btn-primary">+ Add Row</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Check-In Modal -->
+    <div class="modal" id="checkinModal">
+        <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <span class="close" id="closeCheckinModal">&times;</span>
+            <h2 id="checkinModalTitle">Check-In Students</h2>
+            <div style="margin-bottom: 15px; padding: 12px; background: rgba(65, 105, 225, 0.1); border-radius: 8px;">
+                <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">
+                    <span id="checkinBusName"></span> - <span id="checkinRoute"></span> Route
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary);">
+                    Date: <span id="checkinDate"></span>
+                </div>
+            </div>
+            <div class="checkin-stats" style="display: flex; gap: 15px; margin-bottom: 20px; padding: 15px; background: rgba(52, 197, 26, 0.1); border-radius: 8px;">
+                <div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">Total Students</div>
+                    <div id="checkinTotal" style="font-size: 24px; font-weight: 600; color: var(--text-primary);">0</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">Checked In</div>
+                    <div id="checkinCheckedIn" style="font-size: 24px; font-weight: 600; color: var(--success-color);">0</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">Not Checked In</div>
+                    <div id="checkinNotCheckedIn" style="font-size: 24px; font-weight: 600; color: var(--warning-color);">0</div>
+                </div>
+            </div>
+            <div style="margin-bottom: 15px; padding: 12px; background: rgba(255, 193, 7, 0.1); border-radius: 8px; border: 1px solid rgba(255, 193, 7, 0.3);">
+                <div style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Add Student Not on List</div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="checkinStudentSearchInput" class="form-control" placeholder="🔍 Search for student..." style="flex: 1;">
+                    <button id="addCheckinStudentBtn" class="btn btn-secondary" style="white-space: nowrap;">Add</button>
+                </div>
+                <div id="checkinStudentSearchResults" style="margin-top: 8px; max-height: 150px; overflow-y: auto; display: none;">
+                    <!-- Search results will appear here -->
+                </div>
+            </div>
+            <div class="checkin-students-list" id="checkinStudentsList" style="max-height: 400px; overflow-y: auto;">
+                <!-- Students will be dynamically added here -->
+            </div>
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <button id="viewCheckinHistoryBtn" class="btn btn-secondary" style="width: 100%;">View Check-In History</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Check-In History Modal -->
+    <div class="modal" id="checkinHistoryModal">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <span class="close" id="closeCheckinHistoryModal">&times;</span>
+            <h2>Check-In History</h2>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="checkinHistoryDateInput">Select Date:</label>
+                <input type="date" id="checkinHistoryDateInput" class="form-control">
+            </div>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="checkinHistoryBusSelect">Select Bus:</label>
+                <select id="checkinHistoryBusSelect" class="form-control">
+                    <option value="">All Busses</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="checkinHistoryRouteSelect">Select Route:</label>
+                <select id="checkinHistoryRouteSelect" class="form-control">
+                    <option value="">All Routes</option>
+                    <option value="AM">AM Route</option>
+                    <option value="PM">PM Route</option>
+                </select>
+            </div>
+            <button id="loadCheckinHistoryBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 20px;">Load History</button>
+            <div id="checkinHistoryResults" style="margin-top: 20px;">
+                <!-- History results will be displayed here -->
+            </div>
+            <div id="checkinHistoryExportButtons" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <div style="display: flex; gap: 10px;">
+                    <button id="exportCheckinPDFBtn" class="btn btn-primary" style="flex: 1;">📄 Export to PDF</button>
+                    <button id="exportCheckinExcelBtn" class="btn btn-primary" style="flex: 1;">📊 Export to Excel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Encryption password modal (shown on load when encryption is enabled) -->
+    <div class="modal" id="encryptionPasswordModal" style="display: none;">
+        <div class="modal-content" style="max-width: 420px;">
+            <h2 style="margin-bottom: 12px;">🔐 Encryption password</h2>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">
+                Data is encrypted before syncing. Enter the password (from your administrator). You only need to enter it once on this device.
+            </p>
+            <div class="form-group">
+                <label for="encryptionPasswordInput">Password</label>
+                <input type="password" id="encryptionPasswordInput" class="form-control" placeholder="Enter password" autocomplete="off">
+            </div>
+            <div id="encryptionPasswordError" style="color: var(--danger-color); font-size: 13px; margin-bottom: 12px; display: none;"></div>
+            <button type="button" id="encryptionPasswordSubmitBtn" class="btn btn-primary" style="width: 100%;">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close" id="closeSettingsModal">&times;</span>
+            <h2 style="margin-bottom: 20px;">Settings</h2>
+            <div class="settings-section" style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--text-primary);">Firebase Sync</h3>
+                <div style="margin-bottom: 15px; padding: 12px; background: rgba(65, 105, 225, 0.1); border-radius: 8px;">
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Sync Status:</div>
+                    <div id="firebaseSyncStatus" style="font-size: 14px; font-weight: 600; color: var(--primary-color);">Checking...</div>
+                </div>
+                <div style="margin-bottom: 15px; padding: 12px; background: rgba(65, 105, 225, 0.1); border-radius: 8px;">
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Sync ID:</div>
+                    <div id="firebaseSyncId" style="font-size: 13px; color: var(--text-primary); font-family: monospace; word-break: break-all;"></div>
+                    <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+                        All instances of this app automatically use the same Sync ID to share data.
+                    </div>
+                </div>
+                <div style="margin-bottom: 15px; padding: 12px; background: rgba(52, 197, 26, 0.1); border-radius: 8px;">
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Real-time Sync:</div>
+                    <div style="font-size: 14px; font-weight: 600; color: var(--success-color);">✓ Active</div>
+                    <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                        Changes sync automatically between all devices
+                    </div>
+                </div>
+                <button id="manualSyncBtn" class="btn btn-primary" style="width: 100%; margin-top: 10px;">🔄 Force Sync Now</button>
+                <div id="firebaseSyncMessage" style="margin-top: 10px; font-size: 12px; color: var(--text-secondary); text-align: center;"></div>
+            </div>
+            <div class="settings-section" style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 20px;">
+                <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--text-primary);">Data encryption</h3>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                    Encrypt names, addresses, and phone numbers before they are sent to the cloud. You set the password once; staff enter it once per device to unlock.
+                </p>
+                <div id="encryptionAdminSetupSection" style="display: none;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <input type="checkbox" id="encryptionEnabledCheckbox" style="width: auto;">
+                        <label for="encryptionEnabledCheckbox" style="margin: 0;">Encrypt data before syncing</label>
+                    </div>
+                    <div id="encryptionSetPasswordSection" style="display: none; margin-top: 12px;">
+                        <div class="form-group">
+                            <label for="encryptionSetPasswordInput">Set encryption password (you choose; share with staff)</label>
+                            <input type="password" id="encryptionSetPasswordInput" class="form-control" placeholder="Choose a strong password" autocomplete="new-password">
+                        </div>
+                        <div class="form-group">
+                            <label for="encryptionConfirmPasswordInput">Confirm password</label>
+                            <input type="password" id="encryptionConfirmPasswordInput" class="form-control" placeholder="Confirm password" autocomplete="new-password">
+                        </div>
+                        <button type="button" id="encryptionSetPasswordBtn" class="btn btn-primary" style="width: 100%;">Set password and enable encryption</button>
+                        <div id="encryptionSetPasswordError" style="color: var(--danger-color); font-size: 12px; margin-top: 8px; display: none;"></div>
+                    </div>
+                </div>
+                <div id="encryptionStatusSection" style="display: none;">
+                    <div style="padding: 10px; background: rgba(52, 197, 26, 0.1); border-radius: 8px; font-size: 13px; color: var(--success-color); margin-bottom: 12px;">
+                        ✓ Encryption is on. You set the password; staff enter it once per device to unlock.
+                    </div>
+                    <div id="encryptionChangePasswordSection" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                        <div style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Change encryption password</div>
+                        <div class="form-group">
+                            <label for="encryptionCurrentPasswordInput">Current password</label>
+                            <input type="password" id="encryptionCurrentPasswordInput" class="form-control" placeholder="Current password" autocomplete="current-password">
+                        </div>
+                        <div class="form-group">
+                            <label for="encryptionNewPasswordInput">New password</label>
+                            <input type="password" id="encryptionNewPasswordInput" class="form-control" placeholder="New password" autocomplete="new-password">
+                        </div>
+                        <div class="form-group">
+                            <label for="encryptionNewPasswordConfirmInput">Confirm new password</label>
+                            <input type="password" id="encryptionNewPasswordConfirmInput" class="form-control" placeholder="Confirm new password" autocomplete="new-password">
+                        </div>
+                        <button type="button" id="encryptionChangePasswordBtn" class="btn btn-primary" style="width: 100%;">Change password</button>
+                        <div id="encryptionChangePasswordError" style="color: var(--danger-color); font-size: 12px; margin-top: 8px; display: none;"></div>
+                        <div id="encryptionChangePasswordSuccess" style="color: var(--success-color); font-size: 12px; margin-top: 8px; display: none;">✓ Password changed. Share the new password with staff; they will need to enter it once on each device.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-section" style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 20px;">
+                <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--text-primary);">App Updates</h3>
+                <button id="checkUpdateBtn" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                    <span id="updateBtnText">🔄 Check for Updates</span>
+                </button>
+                <p class="settings-help-text" id="updateStatusText" style="margin-top: 8px; font-size: 12px; color: var(--text-secondary); min-height: 20px;"></p>
+            </div>
+            <div class="settings-section" style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 20px;">
+                <p class="settings-version-text" id="versionText" style="font-size: 12px; color: var(--text-secondary); text-align: center; margin: 0; font-style: italic;">App Version: Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

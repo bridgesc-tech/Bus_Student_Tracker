@@ -1,0 +1,25 @@
+{
+  "name": "Bus Student Tracker",
+  "short_name": "Bus Tracker",
+  "description": "Track student bus seating assignments",
+  "version": "1.0.0",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#4169E1",
+  "theme_color": "#4169E1",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
