@@ -440,9 +440,9 @@
                 </p>
                 <div style="display: flex; gap: 10px; margin-bottom: 8px;">
                     <button type="button" id="exportBackupBtn" class="btn btn-primary" style="flex: 1;">📤 Export all data</button>
-                    <button type="button" id="importBackupBtn" class="btn btn-secondary" style="flex: 1;">📥 Import from backup</button>
+                    <label for="backupImportFileInput" class="btn btn-primary" style="flex: 1; margin: 0; text-align: center; cursor: pointer; display: block;">📥 Import from backup</label>
                 </div>
-                <input type="file" id="backupImportFileInput" accept=".json" style="display: none;">
+                <input type="file" id="backupImportFileInput" accept=".json" style="position: absolute; width: 0.1px; height: 0.1px; opacity: 0; overflow: hidden;">
                 <div id="backupImportMessage" style="font-size: 12px; margin-top: 8px; display: none;"></div>
             </div>
             <div class="settings-section" style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 20px;">

@@ -926,7 +926,6 @@ class BusStudentTracker {
             const file = e.target.files[0];
             if (file) this.importFromBackup(file);
         });
-        document.getElementById('importBackupBtn').addEventListener('click', () => document.getElementById('backupImportFileInput').click());
         document.getElementById('encryptionPasswordSubmitBtn').addEventListener('click', () => {
             this.handleEncryptionUnlock(document.getElementById('encryptionPasswordInput').value);
         });
@@ -1384,7 +1383,7 @@ class BusStudentTracker {
         document.getElementById('settingsModal').style.display = 'block';
         document.getElementById('firebaseSyncId').textContent = this.syncId;
         document.getElementById('syncIdInput').value = '';
-        document.getElementById('versionText').textContent = 'App Version: 1.0.1';
+        document.getElementById('versionText').textContent = 'App Version: 1.0.2';
         this.updateSyncStatus();
         this.updateEncryptionSettingsUI();
     }
@@ -1943,7 +1942,7 @@ class BusStudentTracker {
         if (!this.firebaseEnabled || !window.db) return;
         
         try {
-            const CURRENT_VERSION = '1.0.1'; // Update this when deploying new version
+            const CURRENT_VERSION = '1.0.2'; // Update this when deploying new version
             const versionDoc = await window.db.collection('busTracker').doc('appVersion').get();
             
             if (versionDoc.exists) {
