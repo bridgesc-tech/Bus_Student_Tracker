@@ -434,6 +434,18 @@
                 <div id="firebaseSyncMessage" style="margin-top: 10px; font-size: 12px; color: var(--text-secondary); text-align: center;"></div>
             </div>
             <div class="settings-section" style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 20px;">
+                <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--text-primary);">Backup &amp; restore</h3>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                    Export all busses, students, seat assignments, routes, and check-ins to a file. Use this to move data from the app opened as a file on your computer to the app on GitHub Pages, then sync to your phone.
+                </p>
+                <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+                    <button type="button" id="exportBackupBtn" class="btn btn-primary" style="flex: 1;">📤 Export all data</button>
+                    <button type="button" id="importBackupBtn" class="btn btn-secondary" style="flex: 1;">📥 Import from backup</button>
+                </div>
+                <input type="file" id="backupImportFileInput" accept=".json" style="display: none;">
+                <div id="backupImportMessage" style="font-size: 12px; margin-top: 8px; display: none;"></div>
+            </div>
+            <div class="settings-section" style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 20px;">
                 <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--text-primary);">Data encryption</h3>
                 <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
                     Encrypt names, addresses, and phone numbers before they are sent to the cloud. You set the password once; staff enter it once per device to unlock.

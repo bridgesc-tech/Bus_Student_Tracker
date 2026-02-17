@@ -921,6 +921,12 @@ class BusStudentTracker {
         // Settings modal
         document.getElementById('closeSettingsModal').addEventListener('click', () => this.closeSettingsModal());
         document.getElementById('manualSyncBtn').addEventListener('click', () => this.manualSync());
+        document.getElementById('exportBackupBtn').addEventListener('click', () => this.exportAllData());
+        document.getElementById('backupImportFileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) this.importFromBackup(file);
+        });
+        document.getElementById('importBackupBtn').addEventListener('click', () => document.getElementById('backupImportFileInput').click());
         document.getElementById('encryptionPasswordSubmitBtn').addEventListener('click', () => {
             this.handleEncryptionUnlock(document.getElementById('encryptionPasswordInput').value);
         });
@@ -1378,7 +1384,7 @@ class BusStudentTracker {
         document.getElementById('settingsModal').style.display = 'block';
         document.getElementById('firebaseSyncId').textContent = this.syncId;
         document.getElementById('syncIdInput').value = '';
-        document.getElementById('versionText').textContent = 'App Version: 1.0.0';
+        document.getElementById('versionText').textContent = 'App Version: 1.0.1';
         this.updateSyncStatus();
         this.updateEncryptionSettingsUI();
     }
@@ -1539,6 +1545,117 @@ class BusStudentTracker {
         } catch (error) {
             messageEl.textContent = 'Sync failed: ' + error.message;
             messageEl.style.color = 'var(--danger-color)';
+        }
+    }
+
+    // Export all data from IndexedDB to a JSON file (works even when running from file://)
+    async exportAllData() {
+        const backup = await this.getAllDataForExport();
+        const json = JSON.stringify(backup, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bus-tracker-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    getAllDataForExport() {
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['busses', 'students', 'seatAssignments', 'checkins', 'routeRows'], 'readonly');
+            const busStore = transaction.objectStore('busses');
+            const studentStore = transaction.objectStore('students');
+            const assignmentStore = transaction.objectStore('seatAssignments');
+            const checkinStore = transaction.objectStore('checkins');
+            const routeRowStore = transaction.objectStore('routeRows');
+            const result = { busses: [], students: [], seatAssignments: [], checkins: [], routeRows: [] };
+            busStore.getAll().onsuccess = (e) => {
+                result.busses = e.target.result || [];
+                studentStore.getAll().onsuccess = (e2) => {
+                    result.students = e2.target.result || [];
+                    assignmentStore.getAll().onsuccess = (e3) => {
+                        result.seatAssignments = e3.target.result || [];
+                        checkinStore.getAll().onsuccess = (e4) => {
+                            result.checkins = e4.target.result || [];
+                            routeRowStore.getAll().onsuccess = (e5) => {
+                                result.routeRows = e5.target.result || [];
+                                resolve(result);
+                            };
+                        };
+                    };
+                };
+            };
+            transaction.onerror = () => reject(transaction.error);
+        });
+    }
+
+    // Import from backup JSON and optionally push to Firebase
+    async importFromBackup(file) {
+        if (!file || !file.name.endsWith('.json')) {
+            alert('Please select a valid backup JSON file.');
+            return;
+        }
+        const messageEl = document.getElementById('backupImportMessage');
+        messageEl.textContent = 'Importing...';
+        messageEl.style.color = 'var(--text-secondary)';
+        messageEl.style.display = 'block';
+        try {
+            const text = await file.text();
+            const backup = JSON.parse(text);
+            if (!backup.busses || !Array.isArray(backup.busses)) {
+                throw new Error('Invalid backup file: missing busses array');
+            }
+            const busses = backup.busses || [];
+            const students = backup.students || [];
+            const seatAssignments = backup.seatAssignments || [];
+            const checkins = backup.checkins || [];
+            const routeRows = backup.routeRows || [];
+
+            const transaction = this.db.transaction(['busses', 'students', 'seatAssignments', 'checkins', 'routeRows'], 'readwrite');
+            const busStore = transaction.objectStore('busses');
+            const studentStore = transaction.objectStore('students');
+            const assignmentStore = transaction.objectStore('seatAssignments');
+            const checkinStore = transaction.objectStore('checkins');
+            const routeRowStore = transaction.objectStore('routeRows');
+
+            busStore.clear();
+            studentStore.clear();
+            assignmentStore.clear();
+            checkinStore.clear();
+            routeRowStore.clear();
+
+            for (const bus of busses) busStore.put(bus);
+            for (const student of students) studentStore.put(student);
+            for (const a of seatAssignments) assignmentStore.put(a);
+            for (const c of checkins) checkinStore.put(c);
+            for (const r of routeRows) routeRowStore.put(r);
+
+            await new Promise((resolve, reject) => {
+                transaction.oncomplete = resolve;
+                transaction.onerror = () => reject(transaction.error);
+            });
+
+            await this.loadData();
+            this.renderBusses();
+            if (this.currentBusId) await this.renderBusDiagram();
+
+            messageEl.textContent = `Imported ${busses.length} busses, ${students.length} students.`;
+            messageEl.style.color = 'var(--success-color)';
+
+            if (this.firebaseEnabled) {
+                messageEl.textContent += ' Pushing to cloud...';
+                await this.manualSync();
+                messageEl.textContent = 'Imported and synced to cloud. Your phone will update automatically.';
+            } else {
+                messageEl.textContent += ' Open the app from your GitHub Pages URL and click "Force Sync Now" to sync to your phone.';
+            }
+            document.getElementById('backupImportFileInput').value = '';
+            setTimeout(() => { messageEl.style.display = 'none'; }, 8000);
+        } catch (err) {
+            messageEl.textContent = 'Import failed: ' + (err.message || String(err));
+            messageEl.style.color = 'var(--danger-color)';
+            document.getElementById('backupImportFileInput').value = '';
         }
     }
 
@@ -1826,7 +1943,7 @@ class BusStudentTracker {
         if (!this.firebaseEnabled || !window.db) return;
         
         try {
-            const CURRENT_VERSION = '1.0.0'; // Update this when deploying new version
+            const CURRENT_VERSION = '1.0.1'; // Update this when deploying new version
             const versionDoc = await window.db.collection('busTracker').doc('appVersion').get();
             
             if (versionDoc.exists) {
