@@ -1,7 +1,7 @@
 // Bus Student Tracker Application
 // Uses IndexedDB for primary storage with optional Firebase sync
 // Bump APP_VERSION when you deploy; also update service-worker.js and manifest.json
-const APP_VERSION = '1.0.7';
+const APP_VERSION = '1.0.8';
 
 class BusStudentTracker {
     constructor() {
